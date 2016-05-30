@@ -1,39 +1,45 @@
-/* global describe, it */
-'use strict';
+define(function (require) {
+    var assert = require('./assert');
+    var jsen = require('../index');
 
-var assert = assert || require('assert'),
-    jsen = jsen || require('../index.js');
-
-describe('missing $ref', function () {
-    it('passes validation with ignore missing $ref', function () {
-        var schema = {
+    describe('missing $ref', function () {
+        it('passes validation with ignore missing $ref', function () {
+            var schema = {
                 type: 'object',
                 properties: {
-                    test1: { $ref: '#external1'},
+                    test1: {
+                        $ref: '#external1'
+                    },
                     test2: {
                         type: 'number'
                     },
-                    test3: { $ref: '#external3'}    //missing
+                    test3: {
+                        $ref: '#external3'
+                    } // missing
                 },
                 additionalProperties: false
-            },
-            external1 = {
+            };
+            var external1 = {
                 type: 'object',
                 properties: {
-                    test11: { $ref: '#external11'}, //missing
+                    test11: {
+                        $ref: '#external11'
+                    }, // missing
                     test12: {
                         type: 'number'
                     },
-                    test13: { $ref: '#external11'}  //duplicate
+                    test13: {
+                        $ref: '#external11'
+                    } // duplicate
                 }
-            },
-            validate = jsen(schema, {
+            };
+            var validate = jsen(schema, {
                 schemas: {
                     external1: external1
                 },
                 missing$Ref: true
-            }),
-            missingTest = {
+            });
+            var missingTest = {
                 test1: {
                     test11: 'missing',
                     test12: 5,
@@ -41,8 +47,8 @@ describe('missing $ref', function () {
                 },
                 test2: 2,
                 test3: 3
-            },
-            invalidTest = {
+            };
+            var invalidTest = {
                 test1: {
                     test11: 'missing',
                     test12: 5,
@@ -50,13 +56,14 @@ describe('missing $ref', function () {
                 },
                 test2: 'fail',
                 test3: 3
-            },
-            ret;
+            };
+            var ret;
 
-        ret = validate(missingTest);
-        assert(ret);    // true
-
-        ret = validate(invalidTest);
-        assert(!ret);   // !false
+            ret = validate(missingTest);
+            assert(ret); // true
+            ret = validate(invalidTest);
+            assert(!ret); // !false
+        });
     });
+
 });

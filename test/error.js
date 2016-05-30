@@ -1,76 +1,84 @@
-'use strict';
+define(function (require) {
+    var assert = require('./assert');
+    var jsen = require('../index');
 
-var assert = assert || require('assert'),
-    jsen = jsen || require('../index.js');
+    describe('errors', function () {
+        it('errors is empty array before validation', function () {
+            var schema = {
+                type: 'number'
+            };
+            var validate = jsen(schema);
 
-describe('errors', function () {
-    it('errors is empty array before validation', function () {
-        var schema = { type: 'number' },
-            validate = jsen(schema);
+            assert(Array.isArray(validate.errors));
+            assert.strictEqual(validate.errors.length, 0);
+        });
 
-        assert(Array.isArray(validate.errors));
-        assert.strictEqual(validate.errors.length, 0);
-    });
+        it('no errors on successful validation', function () {
+            var schema = {
+                type: 'number'
+            };
+            var validate = jsen(schema);
+            var valid = validate(123);
 
-    it('no errors on successful validation', function () {
-        var schema = { type: 'number' },
-            validate = jsen(schema),
-            valid = validate(123);
+            assert(valid);
+            assert(Array.isArray(validate.errors));
+            assert.strictEqual(validate.errors.length, 0);
+        });
 
-        assert(valid);
-        assert(Array.isArray(validate.errors));
-        assert.strictEqual(validate.errors.length, 0);
-    });
+        it('has errors when validation unsuccessful', function () {
+            var schema = {
+                type: 'number'
+            };
+            var validate = jsen(schema);
+            var valid = validate('123');
 
-    it('has errors when validation unsuccessful', function () {
-        var schema = { type: 'number' },
-            validate = jsen(schema),
-            valid = validate('123');
+            assert(!valid);
+            assert(Array.isArray(validate.errors));
+            assert.strictEqual(validate.errors.length, 1);
+        });
 
-        assert(!valid);
-        assert(Array.isArray(validate.errors));
-        assert.strictEqual(validate.errors.length, 1);
-    });
+        it('clears errors on successive validation calls', function () {
+            var schema = {
+                type: 'number'
+            };
+            var validate = jsen(schema);
 
-    it('clears errors on successive validation calls', function () {
-        var schema = { type: 'number' },
-            validate = jsen(schema);
+            validate('123');
+            assert(Array.isArray(validate.errors));
+            assert.strictEqual(validate.errors.length, 1);
 
-        validate('123');
-        assert(Array.isArray(validate.errors));
-        assert.strictEqual(validate.errors.length, 1);
+            validate(123);
+            assert(Array.isArray(validate.errors));
+            assert.strictEqual(validate.errors.length, 0);
 
-        validate(123);
-        assert(Array.isArray(validate.errors));
-        assert.strictEqual(validate.errors.length, 0);
+            validate('123');
+            assert(Array.isArray(validate.errors));
+            assert.strictEqual(validate.errors.length, 1);
+        });
 
-        validate('123');
-        assert(Array.isArray(validate.errors));
-        assert.strictEqual(validate.errors.length, 1);
-    });
+        it('two successive runs return different arrays', function () {
+            var schema = {
+                type: 'number'
+            };
+            var validate = jsen(schema);
+            var previous;
 
-    it('two successive runs return different arrays', function () {
-        var schema = { type: 'number' },
-            validate = jsen(schema),
-            previous;
+            validate('123');
+            assert.strictEqual(validate.errors.length, 1);
+            previous = validate.errors;
 
-        validate('123');
-        assert.strictEqual(validate.errors.length, 1);
-        previous = validate.errors;
+            validate('123');
+            assert.strictEqual(validate.errors.length, 1);
 
-        validate('123');
-        assert.strictEqual(validate.errors.length, 1);
+            assert.notStrictEqual(validate.errors, previous);
+            assert.deepEqual(validate.errors, previous);
+        });
 
-        assert.notStrictEqual(validate.errors, previous);
-        assert.deepEqual(validate.errors, previous);
-    });
-
-    describe('error object', function () {
-        var schemas = [
+        describe('error object', function () {
+            var schemas = [
                 {
                     type: 'number'
                 },
-
                 {
                     type: 'object',
                     properties: {
@@ -79,70 +87,79 @@ describe('errors', function () {
                         }
                     }
                 },
-
                 {
                     type: 'array',
                     uniqueItems: true
                 },
-
                 {
                     type: 'array',
                     items: {
                         maximum: 10
                     }
                 },
-
                 {
                     type: 'object',
                     properties: {
                         a: {
                             type: 'array',
-                            items: [{
-                                type: 'object',
-                                properties: {
-                                    b: {
-                                        multipleOf: 7
+                            items: [
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        b: {
+                                            multipleOf: 7
+                                        }
                                     }
                                 }
-                            }]
+                            ]
                         }
                     }
                 },
-
                 {
                     allOf: [
-                        { minimum: 5 },
-                        { maximum: 10 }
+                        {
+                            minimum: 5
+                        },
+                        {
+                            maximum: 10
+                        }
                     ]
                 },
-
                 {
                     type: 'object',
                     properties: {
                         a: {
                             anyOf: [
-                                { type: 'string' },
-                                { type: 'number' }
+                                {
+                                    type: 'string'
+                                },
+                                {
+                                    type: 'number'
+                                }
                             ]
                         }
                     }
                 },
-
                 {
                     type: 'array',
-                    items: [{
-                        type: 'object',
-                        properties: {
-                            a: {
-                                oneOf: [
-                                    { type: 'boolean' },
-                                    { type: 'null' }
-                                ]
+                    items: [
+                        {
+                            type: 'object',
+                            properties: {
+                                a: {
+                                    oneOf: [
+                                        {
+                                            type: 'boolean'
+                                        },
+                                        {
+                                            type: 'null'
+                                        }
+                                    ]
+                                }
                             }
                         }
-                    }]
+                    ]
                 },
-
                 {
                     type: 'object',
                     properties: {
@@ -153,7 +170,6 @@ describe('errors', function () {
                         }
                     }
                 },
-
                 {
                     definitions: {
                         positiveInteger: {
@@ -179,192 +195,314 @@ describe('errors', function () {
                         }
                     }
                 },
-
                 {
                     type: 'object',
-                    required: ['a', 'b']
+                    required: [
+                        'a',
+                        'b'
+                    ]
                 },
-
                 {
                     type: 'object',
                     dependencies: {
                         a: {
-                            required: ['b']
+                            required: [
+                                'b'
+                            ]
                         }
                     }
                 },
-
                 {
                     type: 'object',
                     dependencies: {
-                        a: ['b']
+                        a: [
+                            'b'
+                        ]
                     }
                 }
-            ],
-            data = [
-                '123',
-                { a: 123 },
-                [7, 11, 7],
-                [10, 11, 9],
-                { a: [{ b: 8 }] },
-                12,
-                { a: false },
-                [{ a: 123 }],
-                { a: 'abc' },
-                { a: { b: { c: 0 }}},
-                {},
-                { a: 123 },
-                { a: 123 }
             ];
-
-        it ('property: path', function () {
-            var expectedPaths = [
-                    [''],
-                    ['a'],
-                    [''],
-                    ['1'],
-                    ['a.0.b'],
-                    [''],
-                    ['a', 'a'],
-                    ['0.a', '0.a', '0.a'],
-                    ['a'],
-                    ['a.b.c'],
-                    ['a'],
-                    ['b'],
-                    ['b']
+            var data = [
+                '123',
+                {
+                    a: 123
+                },
+                [
+                    7,
+                    11,
+                    7
                 ],
-                validate, valid;
-
-            schemas.forEach(function (schema, index) {
-                validate = jsen(schema);
-                valid = validate(data[index]);
-
-                assert(!valid);
-
-                expectedPaths[index].forEach(function (path, pindex) {
-                    try {
-                        assert.strictEqual(validate.errors[pindex].path, path);
-                    }
-                    catch (e) {
-                        // console.log(index);
-                        // console.log(validate.errors);
-                        throw e;
-                    }
-                });
-            });
-        });
-
-        it ('property: keyword', function () {
-            var expectedKeywords = [
-                    ['type'],
-                    ['type'],
-                    ['uniqueItems'],
-                    ['maximum'],
-                    ['multipleOf'],
-                    ['maximum'],
-                    ['type', 'type', 'anyOf'],
-                    ['type', 'type', 'oneOf'],
-                    ['not'],
-                    ['exclusiveMinimum'],
-                    ['required'],
-                    ['required'],
-                    ['dependencies']
+                [
+                    10,
+                    11,
+                    9
                 ],
-                validate, valid;
-
-            schemas.forEach(function (schema, index) {
-                validate = jsen(schema);
-                valid = validate(data[index]);
-
-                assert(!valid);
-
-                expectedKeywords[index].forEach(function (keyword, kindex) {
-                    try {
-                        assert.strictEqual(validate.errors[kindex].keyword, keyword);
+                {
+                    a: [
+                        {
+                            b: 8
+                        }
+                    ]
+                },
+                12,
+                {
+                    a: false
+                },
+                [
+                    {
+                        a: 123
                     }
-                    catch (e) {
-                        // console.log(index);
-                        // console.log(validate.errors);
-                        throw e;
-                    }
-                });
-            });
-        });
-
-        it('adds required property name to path', function () {
-            var schema = { type: 'object', required: ['a'] },
-                validate = jsen(schema),
-                valid = validate({});
-
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].path, 'a');
-            assert.strictEqual(validate.errors[0].keyword, 'required');
-
-            schema = {
-                type: 'object',
-                properties: {
+                ],
+                {
+                    a: 'abc'
+                },
+                {
                     a: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            required: ['b']
+                        b: {
+                            c: 0
                         }
                     }
-                }
-            };
-
-            validate = jsen(schema);
-            valid = validate({ a: [{}] });
-
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].path, 'a.0.b');
-            assert.strictEqual(validate.errors[0].keyword, 'required');
-        });
-
-        it('adds required dependency property to path', function () {
-            var schema = {
-                    type: 'object',
-                    dependencies: {
-                        a: ['b']
-                    }
                 },
-                validate = jsen(schema),
-                valid = validate({ a: 123 });
+                {},
+                {
+                    a: 123
+                },
+                {
+                    a: 123
+                }
+            ];
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].path, 'b');
-            assert.strictEqual(validate.errors[0].keyword, 'dependencies');
+            it('property: path', function () {
+                var expectedPaths = [
+                    [
+                        ''
+                    ],
+                    [
+                        'a'
+                    ],
+                    [
+                        ''
+                    ],
+                    [
+                        '1'
+                    ],
+                    [
+                        'a.0.b'
+                    ],
+                    [
+                        ''
+                    ],
+                    [
+                        'a',
+                        'a'
+                    ],
+                    [
+                        '0.a',
+                        '0.a',
+                        '0.a'
+                    ],
+                    [
+                        'a'
+                    ],
+                    [
+                        'a.b.c'
+                    ],
+                    [
+                        'a'
+                    ],
+                    [
+                        'b'
+                    ],
+                    [
+                        'b'
+                    ]
+                ];
+                var validate;
+                var valid;
 
-            schema = {
-                type: 'object',
-                properties: {
-                    a: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            dependencies: {
-                                a: ['b']
+                schemas.forEach(function (schema, index) {
+                    validate = jsen(schema);
+                    valid = validate(data[index]);
+
+                    assert(!valid);
+
+                    expectedPaths[index].forEach(function (path, pindex) {
+                        try {
+                            assert.strictEqual(validate.errors[pindex].path, path);
+                        }
+                        catch (e) {
+                            // console.log(index);
+                            // console.log(validate.errors);
+                            throw e;
+                        }
+                    });
+                });
+            });
+
+            it('property: keyword', function () {
+                var expectedKeywords = [
+                    [
+                        'type'
+                    ],
+                    [
+                        'type'
+                    ],
+                    [
+                        'uniqueItems'
+                    ],
+                    [
+                        'maximum'
+                    ],
+                    [
+                        'multipleOf'
+                    ],
+                    [
+                        'maximum'
+                    ],
+                    [
+                        'type',
+                        'type',
+                        'anyOf'
+                    ],
+                    [
+                        'type',
+                        'type',
+                        'oneOf'
+                    ],
+                    [
+                        'not'
+                    ],
+                    [
+                        'exclusiveMinimum'
+                    ],
+                    [
+                        'required'
+                    ],
+                    [
+                        'required'
+                    ],
+                    [
+                        'dependencies'
+                    ]
+                ];
+                var validate;
+                var valid;
+
+                schemas.forEach(function (schema, index) {
+                    validate = jsen(schema);
+                    valid = validate(data[index]);
+
+                    assert(!valid);
+
+                    expectedKeywords[index].forEach(function (keyword, kindex) {
+                        try {
+                            assert.strictEqual(validate.errors[kindex].keyword, keyword);
+                        }
+                        catch (e) {
+                            // console.log(index);
+                            // console.log(validate.errors);
+                            throw e;
+                        }
+                    });
+                });
+            });
+
+            it('adds required property name to path', function () {
+                var schema = {
+                    type: 'object',
+                    required: [
+                        'a'
+                    ]
+                };
+                var validate = jsen(schema);
+                var valid = validate({});
+
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].path, 'a');
+                assert.strictEqual(validate.errors[0].keyword, 'required');
+
+                schema = {
+                    type: 'object',
+                    properties: {
+                        a: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                required: [
+                                    'b'
+                                ]
                             }
                         }
                     }
-                }
-            };
+                };
 
-            validate = jsen(schema);
-            valid = validate({ a: [{ a: 123 }] });
+                validate = jsen(schema);
+                valid = validate({
+                    a: [
+                        {}
+                    ]
+                });
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].path, 'a.0.b');
-            assert.strictEqual(validate.errors[0].keyword, 'dependencies');
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].path, 'a.0.b');
+                assert.strictEqual(validate.errors[0].keyword, 'required');
+            });
+
+            it('adds required dependency property to path', function () {
+                var schema = {
+                    type: 'object',
+                    dependencies: {
+                        a: [
+                            'b'
+                        ]
+                    }
+                };
+                var validate = jsen(schema);
+                var valid = validate({
+                    a: 123
+                });
+
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].path, 'b');
+                assert.strictEqual(validate.errors[0].keyword, 'dependencies');
+
+                schema = {
+                    type: 'object',
+                    properties: {
+                        a: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                dependencies: {
+                                    a: [
+                                        'b'
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                };
+
+                validate = jsen(schema);
+                valid = validate({
+                    a: [
+                        {
+                            a: 123
+                        }
+                    ]
+                });
+
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].path, 'a.0.b');
+                assert.strictEqual(validate.errors[0].keyword, 'dependencies');
+            });
         });
-    });
 
-    describe('multiple errors', function () {
-        var schema = {
+        describe('multiple errors', function () {
+            var schema = {
                 definitions: {
                     array: {
                         maxItems: 1
@@ -374,28 +512,44 @@ describe('errors', function () {
                 properties: {
                     a: {
                         anyOf: [
-                            { items: { type: 'integer' } },
-                            { $ref: '#/definitions/array' },
-                            { items: [{ maximum: 3 }] }
+                            {
+                                items: {
+                                    type: 'integer'
+                                }
+                            },
+                            {
+                                $ref: '#/definitions/array'
+                            },
+                            {
+                                items: [
+                                    {
+                                        maximum: 3
+                                    }
+                                ]
+                            }
                         ]
                     }
                 }
-            },
-            data = { a: [Math.PI, Math.E] },
-            validate = jsen(schema);
+            };
+            var data = {
+                a: [
+                    Math.PI,
+                    Math.E
+                ]
+            };
+            var validate = jsen(schema);
 
-        it('returns multiple errors', function () {
-            var valid = validate(data);
+            it('returns multiple errors', function () {
+                var valid = validate(data);
 
-            // console.log(validate.errors);
-
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 5);
+                // console.log(validate.errors);
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 5);
+            });
         });
-    });
 
-    describe('custom errors', function () {
-        var schemas = [
+        describe('custom errors', function () {
+            var schemas = [
                 {
                     type: 'string',
                     invalidMessage: 'string is invalid',
@@ -403,7 +557,9 @@ describe('errors', function () {
                 },
                 {
                     type: 'object',
-                    required: ['a'],
+                    required: [
+                        'a'
+                    ],
                     properties: {
                         a: {
                             invalidMessage: 'a is invalid',
@@ -424,7 +580,9 @@ describe('errors', function () {
                                         requiredMessage: 'b is required'
                                     }
                                 },
-                                required: ['b']
+                                required: [
+                                    'b'
+                                ]
                             }
                         }
                     }
@@ -444,115 +602,171 @@ describe('errors', function () {
                         }
                     }
                 }
-            ],
-            data = [
+            ];
+            var data = [
                 undefined,
                 {},
-                [{ a: {} }],
-                { a: { c: 123 }}
-            ],
-            expectedMessages = [
+                [
+                    {
+                        a: {}
+                    }
+                ],
+                {
+                    a: {
+                        c: 123
+                    }
+                }
+            ];
+            var expectedMessages = [
                 'string is invalid',
                 'a is required',
                 'b is required',
                 'c is invalid'
-            ],
-            validate,
-            valid;
+            ];
+            var validate;
+            var valid;
 
-        schemas.forEach(function (schema, index) {
-            it (expectedMessages[index], function () {
-                validate = jsen(schema);
+            schemas.forEach(function (schema, index) {
+                it(expectedMessages[index], function () {
+                    validate = jsen(schema);
 
-                valid = validate(data[index]);
+                    valid = validate(data[index]);
 
-                assert(!valid);
-                assert.strictEqual(validate.errors.length, 1);
-                assert.strictEqual(validate.errors[0].message, expectedMessages[index]);
+                    assert(!valid);
+                    assert.strictEqual(validate.errors.length, 1);
+                    assert.strictEqual(validate.errors[0].message, expectedMessages[index]);
+                });
             });
         });
-    });
 
-    describe('custom keyword messages', function () {
-        it('uses custom messages on keywords', function () {
-            var schemas = [
+        describe('custom keyword messages', function () {
+            it('uses custom messages on keywords', function () {
+                var schemas = [
                     {
                         type: 'string',
-                        messages: { type: 'custom message for keyword "type"' }
+                        messages: {
+                            type: 'custom message for keyword "type"'
+                        }
                     },
                     {
-                        enum: [1, 2, 3],
-                        messages: { enum: 'custom message for keyword "enum"' }
+                        enum: [
+                            1,
+                            2,
+                            3
+                        ],
+                        messages: {
+                            enum: 'custom message for keyword "enum"'
+                        }
                     },
                     {
                         minimum: 3,
-                        messages: { minimum: 'custom message for keyword "minimum"' }
+                        messages: {
+                            minimum: 'custom message for keyword "minimum"'
+                        }
                     },
                     {
                         minimum: 3,
                         exclusiveMinimum: true,
-                        messages: { exclusiveMinimum: 'custom message for keyword "exclusiveMinimum"' }
+                        messages: {
+                            exclusiveMinimum: 'custom message for keyword "exclusiveMinimum"'
+                        }
                     },
                     {
                         maximum: 10,
-                        messages: { maximum: 'custom message for keyword "maximum"' }
+                        messages: {
+                            maximum: 'custom message for keyword "maximum"'
+                        }
                     },
                     {
                         maximum: 10,
                         exclusiveMaximum: true,
-                        messages: { exclusiveMaximum: 'custom message for keyword "exclusiveMaximum"' }
+                        messages: {
+                            exclusiveMaximum: 'custom message for keyword "exclusiveMaximum"'
+                        }
                     },
                     {
                         multipleOf: 5,
-                        messages: { multipleOf: 'custom message for keyword "multipleOf"' }
+                        messages: {
+                            multipleOf: 'custom message for keyword "multipleOf"'
+                        }
                     },
                     {
                         minLength: 3,
-                        messages: { minLength: 'custom message for keyword "minLength"' }
+                        messages: {
+                            minLength: 'custom message for keyword "minLength"'
+                        }
                     },
                     {
                         maxLength: 5,
-                        messages: { maxLength: 'custom message for keyword "maxLength"' }
+                        messages: {
+                            maxLength: 'custom message for keyword "maxLength"'
+                        }
                     },
                     {
                         pattern: '\\d+',
-                        messages: { pattern: 'custom message for keyword "pattern"' }
+                        messages: {
+                            pattern: 'custom message for keyword "pattern"'
+                        }
                     },
                     {
                         format: 'email',
-                        messages: { format: 'custom message for keyword "format"' }
+                        messages: {
+                            format: 'custom message for keyword "format"'
+                        }
                     },
                     {
                         minItems: 1,
-                        messages: { minItems: 'custom message for keyword "minItems"' }
+                        messages: {
+                            minItems: 'custom message for keyword "minItems"'
+                        }
                     },
                     {
                         maxItems: 1,
-                        messages: { maxItems: 'custom message for keyword "maxItems"' }
+                        messages: {
+                            maxItems: 'custom message for keyword "maxItems"'
+                        }
                     },
                     {
                         additionalItems: false,
-                        items: [{ type: 'string' }],
-                        messages: { additionalItems: 'custom message for keyword "additionalItems"' }
+                        items: [
+                            {
+                                type: 'string'
+                            }
+                        ],
+                        messages: {
+                            additionalItems: 'custom message for keyword "additionalItems"'
+                        }
                     },
                     {
                         uniqueItems: true,
-                        messages: { uniqueItems: 'custom message for keyword "uniqueItems"' }
+                        messages: {
+                            uniqueItems: 'custom message for keyword "uniqueItems"'
+                        }
                     },
                     {
                         minProperties: 1,
-                        messages: { minProperties: 'custom message for keyword "minProperties"' }
+                        messages: {
+                            minProperties: 'custom message for keyword "minProperties"'
+                        }
                     },
                     {
                         maxProperties: 1,
-                        messages: { maxProperties: 'custom message for keyword "maxProperties"' }
+                        messages: {
+                            maxProperties: 'custom message for keyword "maxProperties"'
+                        }
                     },
                     {
-                        required: ['foo'],
-                        messages: { required: 'custom message for keyword "required"' }
+                        required: [
+                            'foo'
+                        ],
+                        messages: {
+                            required: 'custom message for keyword "required"'
+                        }
                     },
                     {
-                        required: ['foo'],
+                        required: [
+                            'foo'
+                        ],
                         properties: {
                             foo: {
                                 messages: {
@@ -562,7 +776,9 @@ describe('errors', function () {
                         }
                     },
                     {
-                        required: ['foo'],
+                        required: [
+                            'foo'
+                        ],
                         properties: {
                             foo: {
                                 messages: {
@@ -570,40 +786,62 @@ describe('errors', function () {
                                 }
                             }
                         },
-                        messages: { required: 'this custom message for keyword "required" is NOT assigned' }
+                        messages: {
+                            required: 'this custom message for keyword "required" is NOT assigned'
+                        }
                     },
                     {
                         additionalProperties: false,
-                        messages: { additionalProperties: 'custom message for keyword "additionalProperties"' }
+                        messages: {
+                            additionalProperties: 'custom message for keyword "additionalProperties"'
+                        }
                     },
                     {
                         dependencies: {
-                            foo: ['bar']
+                            foo: [
+                                'bar'
+                            ]
                         },
-                        messages: { dependencies: 'custom message for keyword "dependencies"' }
+                        messages: {
+                            dependencies: 'custom message for keyword "dependencies"'
+                        }
                     },
                     {
                         anyOf: [
-                            { type: 'string' },
-                            { type: 'integer' }
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'integer'
+                            }
                         ],
-                        messages: { anyOf: 'custom message for keyword "anyOf"' }
+                        messages: {
+                            anyOf: 'custom message for keyword "anyOf"'
+                        }
                     },
                     {
                         oneOf: [
-                            { type: 'string' },
-                            { type: 'integer' }
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'integer'
+                            }
                         ],
-                        messages: { oneOf: 'custom message for keyword "oneOf"' }
+                        messages: {
+                            oneOf: 'custom message for keyword "oneOf"'
+                        }
                     },
                     {
                         not: {
                             type: 'string'
                         },
-                        messages: { not: 'custom message for keyword "not"' }
+                        messages: {
+                            not: 'custom message for keyword "not"'
+                        }
                     }
-                ],
-                data = [
+                ];
+                var data = [
                     123,
                     5,
                     1,
@@ -616,21 +854,39 @@ describe('errors', function () {
                     'abc',
                     'invalid email',
                     [],
-                    [1, 2, 3],
-                    ['abc', 'def'],
-                    [1, 2, 2],
+                    [
+                        1,
+                        2,
+                        3
+                    ],
+                    [
+                        'abc',
+                        'def'
+                    ],
+                    [
+                        1,
+                        2,
+                        2
+                    ],
                     {},
-                    { foo: 1, bar: 2 },
+                    {
+                        foo: 1,
+                        bar: 2
+                    },
                     {},
                     {},
                     {},
-                    { foo: 'bar' },
-                    { foo: 'abc' },
+                    {
+                        foo: 'bar'
+                    },
+                    {
+                        foo: 'abc'
+                    },
                     null,
                     null,
                     'abc'
-                ],
-                expectedMessages = [
+                ];
+                var expectedMessages = [
                     schemas[0].messages.type,
                     schemas[1].messages.enum,
                     schemas[2].messages.minimum,
@@ -656,22 +912,22 @@ describe('errors', function () {
                     schemas[22].messages.anyOf,
                     schemas[23].messages.oneOf,
                     schemas[24].messages.not
-                ],
-                validate,
-                valid;
+                ];
+                var validate;
+                var valid;
 
-            schemas.forEach(function (schema, index) {
-                validate = jsen(schema);
+                schemas.forEach(function (schema, index) {
+                    validate = jsen(schema);
 
-                valid = validate(data[index]);
+                    valid = validate(data[index]);
 
-                assert(!valid);
-                assert.strictEqual(validate.errors[validate.errors.length - 1].message, expectedMessages[index]);
+                    assert(!valid);
+                    assert.strictEqual(validate.errors[validate.errors.length - 1].message, expectedMessages[index]);
+                });
             });
-        });
 
-        it('does not use custom messages on keyword: items (object)', function () {
-            var schema = {
+            it('does not use custom messages on keyword: items (object)', function () {
+                var schema = {
                     items: {
                         type: 'string',
                         messages: {
@@ -681,37 +937,44 @@ describe('errors', function () {
                     messages: {
                         items: 'will not be assigned'
                     }
-                },
-                validate = jsen(schema),
-                valid = validate([123]);
+                };
+                var validate = jsen(schema);
+                var valid = validate([
+                    123
+                ]);
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].message, 'will be assigned');
-        });
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].message, 'will be assigned');
+            });
 
-        it('does not use custom messages on keyword: items (array)', function () {
-            var schema = {
-                    items: [{
-                        type: 'string',
-                        messages: {
-                            type: 'will be assigned'
+            it('does not use custom messages on keyword: items (array)', function () {
+                var schema = {
+                    items: [
+                        {
+                            type: 'string',
+                            messages: {
+                                type: 'will be assigned'
+                            }
                         }
-                    }],
+                    ],
                     messages: {
                         items: 'will not be assigned'
                     }
-                },
-                validate = jsen(schema),
-                valid = validate([123, 123]);
+                };
+                var validate = jsen(schema);
+                var valid = validate([
+                    123,
+                    123
+                ]);
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].message, 'will be assigned');
-        });
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].message, 'will be assigned');
+            });
 
-        it('does not use custom messages on keyword: properties', function () {
-            var schema = {
+            it('does not use custom messages on keyword: properties', function () {
+                var schema = {
                     properties: {
                         foo: {
                             type: 'number',
@@ -723,17 +986,19 @@ describe('errors', function () {
                     messages: {
                         properties: 'will not be assigned'
                     }
-                },
-                validate = jsen(schema),
-                valid = validate({ foo: 'bar' });
+                };
+                var validate = jsen(schema);
+                var valid = validate({
+                    foo: 'bar'
+                });
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].message, 'will be assigned');
-        });
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].message, 'will be assigned');
+            });
 
-        it('does not use custom messages on keyword: patternProperties', function () {
-            var schema = {
+            it('does not use custom messages on keyword: patternProperties', function () {
+                var schema = {
                     patternProperties: {
                         '^foo$': {
                             type: 'number',
@@ -745,17 +1010,19 @@ describe('errors', function () {
                     messages: {
                         patternProperties: 'will not be assigned'
                     }
-                },
-                validate = jsen(schema),
-                valid = validate({ foo: 'bar' });
+                };
+                var validate = jsen(schema);
+                var valid = validate({
+                    foo: 'bar'
+                });
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].message, 'will be assigned');
-        });
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].message, 'will be assigned');
+            });
 
-        it('does not use custom messages on keyword: dependencies (schema)', function () {
-            var schema = {
+            it('does not use custom messages on keyword: dependencies (schema)', function () {
+                var schema = {
                     dependencies: {
                         foo: {
                             minProperties: 2,
@@ -767,17 +1034,19 @@ describe('errors', function () {
                     messages: {
                         dependencies: 'will not be assigned'
                     }
-                },
-                validate = jsen(schema),
-                valid = validate({ foo: 'bar' });
+                };
+                var validate = jsen(schema);
+                var valid = validate({
+                    foo: 'bar'
+                });
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].message, 'will be assigned');
-        });
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].message, 'will be assigned');
+            });
 
-        it('does not use custom messages on keyword: allOf', function () {
-            var schema = {
+            it('does not use custom messages on keyword: allOf', function () {
+                var schema = {
                     dependencies: {
                         foo: {
                             minProperties: 2,
@@ -803,13 +1072,15 @@ describe('errors', function () {
                     messages: {
                         allOf: 'will not be assigned'
                     }
-                },
-                validate = jsen(schema),
-                valid = validate(6);
+                };
+                var validate = jsen(schema);
+                var valid = validate(6);
 
-            assert(!valid);
-            assert.strictEqual(validate.errors.length, 1);
-            assert.strictEqual(validate.errors[0].message, 'will be assigned');
+                assert(!valid);
+                assert.strictEqual(validate.errors.length, 1);
+                assert.strictEqual(validate.errors[0].message, 'will be assigned');
+            });
         });
     });
+
 });

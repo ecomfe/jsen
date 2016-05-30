@@ -1,14 +1,14 @@
 {
   "name": "jsen",
-  "version": "0.6.1",
+  "version": "0.0.1",
   "description": "JSON-Schema validator built for speed",
-  "author": "Veli Pehlivanov <bugventure@gmail.com>",
-  "homepage": "https://github.com/bugventure/jsen",
+  "author": "leeight <leeight@gmail.com>",
+  "homepage": "https://github.com/ecomfe/jsen",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bugventure/jsen.git"
+    "url": "https://github.com/ecomfe/jsen.git"
   },
-  "bugs": "https://github.com/bugventure/jsen/issues",
+  "bugs": "https://github.com/ecomfe/jsen/issues",
   "keywords": [
     "JSON",
     "schema",
@@ -16,18 +16,8 @@
     "speed"
   ],
   "license": "MIT",
-  "main": "index.js",
-  "scripts": {
-    "test": "./node_modules/.bin/mocha",
-    "build": "cat ./lib/header > ./dist/jsen.js && ./node_modules/.bin/browserify index.js -s jsen >> ./dist/jsen.js && ./node_modules/.bin/uglify -s ./dist/jsen.js -o ./dist/jsen.min.temp && cp ./lib/header ./dist/jsen.min.js && cat ./dist/jsen.min.temp >> ./dist/jsen.min.js && rm ./dist/jsen.min.temp",
-    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage"
-  },
+  "main": "./index",
   "devDependencies": {
-    "browserify": "10.x",
-    "coveralls": "2.x",
-    "istanbul": "0.x",
-    "json-schema-test-suite": "0.0.10",
-    "mocha": "1.x",
-    "uglify": "0.x"
+    "mocha": "^2.5.3"
   }
 }

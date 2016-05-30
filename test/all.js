@@ -1,0 +1,23 @@
+define(function (require) {
+    require('./any');
+    require('./array');
+    require('./boolean');
+    require('./build');
+    require('./clone');
+    require('./date');
+    require('./equal');
+    require('./error');
+    require('./fixes');
+    require('./format');
+    require('./greedy');
+    require('./index');
+    require('./integer');
+    require('./missing');
+    require('./multi');
+    require('./null');
+    require('./number');
+    require('./object');
+    require('./reference');
+    require('./string');
+    require('./unique');
+});

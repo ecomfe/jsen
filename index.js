@@ -1,1 +1,18 @@
-module.exports = require('./lib/jsen.js');
+/**
+ * @file index.js
+ * @author leeight
+ */
+
+define(function (require) {
+    return require('./lib/jsen');
+});
+
+
+
+
+
+
+
+
+
+

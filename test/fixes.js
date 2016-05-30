@@ -1,51 +1,52 @@
-'use strict';
+define(function (require) {
+    var assert = require('./assert');
+    var jsen = require('../index');
 
-var assert = assert || require('assert'),
-    jsen = jsen || require('../index.js');
+    describe('fixes', function () {
+        it('Fix broken inlining of regular expressions containing slashes (#15, #25)', function () {
+            var schema = {
+                type: 'string',
+                pattern: '^/dev/[^/]+(/[^/]+)*$'
+            };
 
-describe('fixes', function () {
-    it('Fix broken inlining of regular expressions containing slashes (#15, #25)', function () {
-        var schema = {
-            type: 'string',
-            pattern: '^/dev/[^/]+(/[^/]+)*$'
-        };
-
-        assert.doesNotThrow(function () {
-            jsen(schema);
+            assert.doesNotThrow(function () {
+                jsen(schema);
+            });
         });
-    });
 
-    it('Fix broken inlining of regular expressions containing slashes 2 (#46)', function () {
-        var schema = {
-            type: 'string',
-            pattern: '^(/[^/ ]*)+/?$'
-        };
+        it('Fix broken inlining of regular expressions containing slashes 2 (#46)', function () {
+            var schema = {
+                type: 'string',
+                pattern: '^(/[^/ ]*)+/?$'
+            };
 
-        assert.doesNotThrow(function () {
-            jsen(schema);
+            assert.doesNotThrow(function () {
+                jsen(schema);
+            });
         });
-    });
 
-    it('Fix code generation breaks when object properties in schema are not valid identifiers (#16)', function () {
-        var schema = {
+        it('Fix code generation breaks when object properties in schema are not valid identifiers (#16)', function () {
+            var schema = {
                 type: 'object',
                 properties: {
                     123: {
                         type: 'boolean'
                     }
                 }
-            },
-            validate;
+            };
+            var validate;
 
-        assert.doesNotThrow(function () {
-            validate = jsen(schema);
+            assert.doesNotThrow(function () {
+                validate = jsen(schema);
+            });
+
+            assert(validate({
+                123: true
+            }));
         });
 
-        assert(validate({ 123: true }));
-    });
-
-    it('Fix cannot dereference schema when ids change resolution scope (#14)', function () {
-        var schema = {
+        it('Fix cannot dereference schema when ids change resolution scope (#14)', function () {
+            var schema = {
                 $ref: '#child',
                 definitions: {
                     child: {
@@ -53,124 +54,181 @@ describe('fixes', function () {
                         type: 'string'
                     }
                 }
-            },
-            validate;
+            };
+            var validate;
 
-        assert.doesNotThrow(function () {
-            validate = jsen(schema);
-        });
+            assert.doesNotThrow(function () {
+                validate = jsen(schema);
+            });
 
-        assert(validate('abc'));
-        assert(!validate(123));
+            assert(validate('abc'));
+            assert(!validate(123));
 
-        schema = {
-            $ref: '#child/definitions/subchild',
-            definitions: {
-                child: {
-                    id: '#child',
-                    definitions: {
-                        subchild: {
-                            type: 'number'
+            schema = {
+                $ref: '#child/definitions/subchild',
+                definitions: {
+                    child: {
+                        id: '#child',
+                        definitions: {
+                            subchild: {
+                                type: 'number'
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
 
-        assert.throws(function () {
-            // cannot dereference a URI, part of which is an ID
-            validate = jsen(schema);
+            assert.throws(function () {
+                // cannot dereference a URI, part of which is an ID
+                validate = jsen(schema);
+            });
         });
-    });
 
-    it('Fix recursive calls to the same cached $ref validator resets the error object', function () {
-        var schema = {
+        it('Fix recursive calls to the same cached $ref validator resets the error object', function () {
+            var schema = {
                 type: 'array',
                 items: {
                     type: 'object',
                     properties: {
-                        foo: { $ref: '#' }
-                    },
-                    required: ['foo']
-                }
-            },
-            validate = jsen(schema);
-
-        assert(validate([{ foo: [] }]));
-        assert(validate([{ foo: [{ foo: [] }] }]));
-        assert(!validate([{ bar: [] }]));
-        assert(!validate([{ foo: [{ foo: [] }, { bar: [] }] }]));   // Bug! False positive
-    });
-
-    it('Fix cannot build validator function with nested refs (#48, #50)', function () {
-        assert.doesNotThrow(function () {
-            jsen({
-                a: {
-                    properties: {
-                        b: {
-                            $ref: '#/c'
+                        foo: {
+                            $ref: '#'
                         }
+                    },
+                    required: [
+                        'foo'
+                    ]
+                }
+            };
+            var validate = jsen(schema);
+
+            assert(validate([
+                {
+                    foo: []
+                }
+            ]));
+            assert(validate([
+                {
+                    foo: [
+                        {
+                            foo: []
+                        }
+                    ]
+                }
+            ]));
+            assert(!validate([
+                    {
+                        bar: []
                     }
-                },
-                c: {
-                    type: 'any'
-                },
-                $ref: '#/a'
+                ]));
+            assert(!validate([
+                    {
+                        foo: [
+                            {
+                                foo: []
+                            },
+                            {
+                                bar: []
+                            }
+                        ]
+                    }
+                ])); // Bug! False positive
+        });
+
+        it('Fix cannot build validator function with nested refs (#48, #50)', function () {
+            assert.doesNotThrow(function () {
+                jsen({
+                    a: {
+                        properties: {
+                            b: {
+                                $ref: '#/c'
+                            }
+                        }
+                    },
+                    c: {
+                        type: 'any'
+                    },
+                    $ref: '#/a'
+                });
             });
         });
-    });
 
-    it('Fix build() doesn\'t work with allOf (#40)', function () {
-        var schemaA = {
+        it('Fix build() doesn\'t work with allOf (#40)', function () {
+            var schemaA = {
                 $schema: 'http://json-schema.org/draft-04/schema#',
                 id: 'http://jsen.bis/schemaA',
                 type: 'object',
                 properties: {
-                    firstName: { type: 'string' },
-                    lastName: { type: 'string'}
+                    firstName: {
+                        type: 'string'
+                    },
+                    lastName: {
+                        type: 'string'
+                    }
                 },
-                required: ['firstName', 'lastName']
-            },
-            schemaB = {
+                required: [
+                    'firstName',
+                    'lastName'
+                ]
+            };
+            var schemaB = {
                 $schema: 'http://json-schema.org/draft-04/schema#',
                 id: 'http://jsen.bis/schemaB',
                 type: 'object',
                 properties: {
-                    email: { type: 'string' },
-                    contactType: { type: 'string', default: 'personal' }
+                    email: {
+                        type: 'string'
+                    },
+                    contactType: {
+                        type: 'string',
+                        default: 'personal'
+                    }
                 },
-                required: ['email']
-            },
-            mySchema = {
+                required: [
+                    'email'
+                ]
+            };
+            var mySchema = {
                 $schema: 'http://json-schema.org/draft-04/schema#',
                 id: 'http://jsen.biz/mySchema',
                 type: 'object',
                 allOf: [
-                    { $ref: 'http://jsen.bis/schemaA' },
-                    { $ref: 'http://jsen.bis/schemaB' }
+                    {
+                        $ref: 'http://jsen.bis/schemaA'
+                    },
+                    {
+                        $ref: 'http://jsen.bis/schemaB'
+                    }
                 ]
-            },
-            baseSchemas = {
+            };
+            var baseSchemas = {
                 'http://jsen.bis/schemaA': schemaA,
                 'http://jsen.bis/schemaB': schemaB
-            },
-            data = {
+            };
+            var data = {
                 firstName: 'bunk',
                 lastName: 'junk',
                 email: 'asdf@biz',
                 funky: true
-            },
-            validator = jsen(mySchema, { schemas: baseSchemas, greedy: true });
+            };
+            var validator = jsen(mySchema, {
+                schemas: baseSchemas,
+                greedy: true
+            });
 
-        assert(validator(data));
+            assert(validator(data));
 
-        validator.build(data, { additionalProperties: false, copy: false });
+            validator.build(data, {
+                additionalProperties: false,
+                copy: false
+            });
 
-        assert.deepEqual(data, {
-            firstName: 'bunk',
-            lastName: 'junk',
-            email: 'asdf@biz',
-            contactType: 'personal'
+            assert.deepEqual(data, {
+                firstName: 'bunk',
+                lastName: 'junk',
+                email: 'asdf@biz',
+                contactType: 'personal'
+            });
         });
     });
+
 });
